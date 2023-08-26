@@ -10,6 +10,7 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <iostream>
 
 #define SOCKET_NUM 3
 enum
@@ -36,8 +37,17 @@ static CMountProg g_MountProg;
 /// <summary>
 /// Creates a log file for this program (Recommended for running this program without cmd (Task Scheduler))
 /// </summary>
-static void recordLogs() 
+static void recordLogs(std::string& logText) 
 {
+    // Get the current working directory
+    char result[MAX_PATH];
+    
+    // Create the folder logs within the directory
+    // Check if logfile exists, if yes then open and add, if no then create new file
+    std::string logFileName = "NFSLogs";
+    // Log the time and the text from the logText
+    // Close the process (memory safety)
+
 
 }
 
