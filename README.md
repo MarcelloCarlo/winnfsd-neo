@@ -4,7 +4,7 @@
 
 Introduction
 ------------
-* Fork of WinNFSd_edited by ZeWarden(http://github.com/ZeWaren/WinNFSd_edited), based on WinNFSd by vincentgao (http://sourceforge.net/projects/winnfsd/).
+* Fork of winnfs by marcharding (https://github.com/winnfsd/winnfsd) which is a fork of WinNFSd_edited by ZeWarden(http://github.com/ZeWaren/WinNFSd_edited), based on WinNFSd by vincentgao (http://sourceforge.net/projects/winnfsd/).
 * License: GPL.
 * Runs on all major versions of Windows.
 
