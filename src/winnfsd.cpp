@@ -11,24 +11,29 @@
 #include <fstream>
 #include <vector>
 #include <iostream>
+#include <string>
+#include <windows.h>
+
+#define GetCurrentDir _getcwd
+
 
 #define SOCKET_NUM 3
 enum
 {
-    PORTMAP_PORT = 111,
-    MOUNT_PORT = 1058,
-    NFS_PORT = 2049
+	PORTMAP_PORT = 111,
+	MOUNT_PORT = 1058,
+	NFS_PORT = 2049
 };
 enum
 {
-    PROG_PORTMAP = 100000,
-    PROG_NFS = 100003,
-    PROG_MOUNT = 100005
+	PROG_PORTMAP = 100000,
+	PROG_NFS = 100003,
+	PROG_MOUNT = 100005
 };
 
 static unsigned int g_nUID, g_nGID;
 static bool g_bLogOn;
-static char *g_sFileName;
+static char* g_sFileName;
 static CRPCServer g_RPCServer;
 static CPortmapProg g_PortmapProg;
 static CNFSProg g_NFSProg;
@@ -37,106 +42,117 @@ static CMountProg g_MountProg;
 /// <summary>
 /// Creates a log file for this program (Recommended for running this program without cmd (Task Scheduler))
 /// </summary>
-static void recordLogs(std::string& logText) 
+static void recordLogs(std::string& logText)
 {
-    // Get the current working directory
-    char result[MAX_PATH];
-    
-    // Create the folder logs within the directory
-    // Check if logfile exists, if yes then open and add, if no then create new file
-    std::string logFileName = "NFSLogs";
-    // Log the time and the text from the logText
-    // Close the process (memory safety)
+	// Get the current working directory
+	char cCurrentPath[FILENAME_MAX];
+
+	GetCurrentDir(cCurrentPath, sizeof(cCurrentPath));
+
+	// Create the folder logs within the directory
+	char logFolder[5] = "logs";
+	std::strcat(cCurrentPath, logFolder);
+
+	if (!CreateDirectory(cCurrentPath, NULL))
+	{
+		CreateDirectory("C:\\logs\\", NULL);
+	}
+	// Check if logfile exists, if yes then open and add, if no then create new file
+	std::string logFileName = "NFSLogs";
+	// Log the time and the text from the logText
+	// Close the process (memory safety)
 
 
 }
 
-static void printUsage(char *pExe)
+static void printUsage(char* pExe)
 {
-    printf("\n");
-    printf("Usage: %s [-id <uid> <gid>] [-log on | off] [-pathFile <file>] [-addr <ip>] [export path] [alias path]\n\n", pExe);
-    printf("At least a file or a path is needed\n");
-    printf("For example:\n");
-    printf("On Windows> %s d:\\work\n", pExe);
-    printf("On Linux> mount -t nfs 192.168.12.34:/d/work mount\n\n");
-    printf("For another example:\n");
-    printf("On Windows> %s d:\\work /exports\n", pExe);
-    printf("On Linux> mount -t nfs 192.168.12.34:/exports\n\n");
-    printf("Another example where WinNFSd is only bound to a specific interface:\n");
-    printf("On Windows> %s -addr 192.168.12.34 d:\\work /exports\n", pExe);
-    printf("On Linux> mount - t nfs 192.168.12.34: / exports\n\n");
-    printf("Use \".\" to export the current directory (works also for -filePath):\n");
-    printf("On Windows> %s . /exports\n", pExe);
+	printf("\n");
+	printf("Usage: %s [-id <uid> <gid>] [-log on | off] [-pathFile <file>] [-addr <ip>] [export path] [alias path]\n\n", pExe);
+	printf("At least a file or a path is needed\n");
+	printf("For example:\n");
+	printf("On Windows> %s d:\\work\n", pExe);
+	printf("On Linux> mount -t nfs 192.168.12.34:/d/work mount\n\n");
+	printf("For another example:\n");
+	printf("On Windows> %s d:\\work /exports\n", pExe);
+	printf("On Linux> mount -t nfs 192.168.12.34:/exports\n\n");
+	printf("Another example where WinNFSd is only bound to a specific interface:\n");
+	printf("On Windows> %s -addr 192.168.12.34 d:\\work /exports\n", pExe);
+	printf("On Linux> mount - t nfs 192.168.12.34: / exports\n\n");
+	printf("Use \".\" to export the current directory (works also for -filePath):\n");
+	printf("On Windows> %s . /exports\n", pExe);
 }
 
 static void printLine(void)
 {
-    printf("=====================================================\n");
+	printf("=====================================================\n");
 }
 
 static void printAbout(void)
 {
-    printLine();
-    printf("WinNFSd {{VERSION}} [{{HASH}}]\n");
-    printf("Network File System server for Windows\n");
-    printf("Copyright (C) 2005 Ming-Yang Kao\n");
-    printf("Edited in 2011 by ZeWaren\n");
-    printf("Edited in 2013 by Alexander Schneider (Jankowfsky AG)\n");
+	printLine();
+	printf("WinNFSd {{VERSION}} [{{HASH}}]\n");
+	printf("Network File System server for Windows\n");
+	printf("Copyright (C) 2005 Ming-Yang Kao\n");
+	printf("Edited in 2011 by ZeWaren\n");
+	printf("Edited in 2013 by Alexander Schneider (Jankowfsky AG)\n");
 	printf("Edited in 2014 2015 by Yann Schepens\n");
 	printf("Edited in 2016 by Peter Philipp (Cando Image GmbH), Marc Harding\n");
-    printf("Edited in 2023 by John Carlo Gutierrez\n");
-    printLine();
+	printf("Edited in 2023 by John Carlo Gutierrez\n");
+	printLine();
 }
 
 static void printHelp(void)
 {
-    printLine();
-    printf("Commands:\n");
-    printf("about: display messages about this program\n");
-    printf("help: display help\n");
-    printf("log on/off: display log messages or not\n");
-    printf("list: list mounted clients\n");
-    printf("refresh: refresh the mounted folders\n");
-    printf("reset: reset the service\n");
-    printf("quit: quit this program\n");
-    printLine();
+	printLine();
+	printf("Commands:\n");
+	printf("about: display messages about this program\n");
+	printf("help: display help\n");
+	printf("log on/off: display log messages or not\n");
+	printf("list: list mounted clients\n");
+	printf("refresh: refresh the mounted folders\n");
+	printf("reset: reset the service\n");
+	printf("quit: quit this program\n");
+	printLine();
 }
 
 static void printCount(void)
 {
-    int nNum;
+	int nNum;
 
-    nNum = g_MountProg.GetMountNumber();
+	nNum = g_MountProg.GetMountNumber();
 
-    if (nNum == 0) {
-        printf("There is no client mounted.\n");
-    } else if (nNum == 1) {
-        printf("There is 1 client mounted.\n");
-    } else {
-        printf("There are %d clients mounted.\n", nNum);
-    }
+	if (nNum == 0) {
+		printf("There is no client mounted.\n");
+	}
+	else if (nNum == 1) {
+		printf("There is 1 client mounted.\n");
+	}
+	else {
+		printf("There are %d clients mounted.\n", nNum);
+	}
 }
 
 static void printList(void)
 {
-    int i, nNum;
+	int i, nNum;
 
-    printLine();
-    nNum = g_MountProg.GetMountNumber();
+	printLine();
+	nNum = g_MountProg.GetMountNumber();
 
-    for (i = 0; i < nNum; i++) {
-        printf("%s\n", g_MountProg.GetClientAddr(i));
-    }
+	for (i = 0; i < nNum; i++) {
+		printf("%s\n", g_MountProg.GetClientAddr(i));
+	}
 
-    printCount();
-    printLine();
+	printCount();
+	printLine();
 }
 
 static void printConfirmQuit(void)
 {
-    printf("\n");
-    printCount();
-    printf("Are you sure to quit? (y/N): ");
+	printf("\n");
+	printCount();
+	printf("Are you sure to quit? (y/N): ");
 }
 
 static void mountPaths(std::vector<std::vector<std::string>> paths)
@@ -145,8 +161,8 @@ static void mountPaths(std::vector<std::vector<std::string>> paths)
 	int numberOfElements = paths.size();
 
 	for (i = 0; i < numberOfElements; i++) {
-		char *pPath = (char*)paths[i][0].c_str();
-		char *pPathAlias = (char*)paths[i][1].c_str();
+		char* pPath = (char*)paths[i][0].c_str();
+		char* pPathAlias = (char*)paths[i][1].c_str();
 		g_MountProg.Export(pPath, pPathAlias);  //export path for mount
 	}
 }
@@ -166,18 +182,24 @@ static void inputCommand(void)
 
 		if (_stricmp(command, "about") == 0) {
 			printAbout();
-		} else if (_stricmp(command, "help") == 0) {
+		}
+		else if (_stricmp(command, "help") == 0) {
 			printHelp();
-		} else if (_stricmp(command, "log on") == 0) {
+		}
+		else if (_stricmp(command, "log on") == 0) {
 			g_RPCServer.SetLogOn(true);
-		} else if (_stricmp(command, "log off") == 0) {
+		}
+		else if (_stricmp(command, "log off") == 0) {
 			g_RPCServer.SetLogOn(false);
-		} else if (_stricmp(command, "list") == 0) {
+		}
+		else if (_stricmp(command, "list") == 0) {
 			printList();
-		} else if (_stricmp(command, "quit") == 0) {
+		}
+		else if (_stricmp(command, "quit") == 0) {
 			if (g_MountProg.GetMountNumber() == 0) {
 				break;
-			} else {
+			}
+			else {
 				printConfirmQuit();
 				fgets(command, 20, stdin);
 
@@ -185,11 +207,14 @@ static void inputCommand(void)
 					break;
 				}
 			}
-		} else if (_stricmp(command, "refresh") == 0) {
+		}
+		else if (_stricmp(command, "refresh") == 0) {
 			g_MountProg.Refresh();
-		} else if (_stricmp(command, "reset") == 0) {
+		}
+		else if (_stricmp(command, "reset") == 0) {
 			g_RPCServer.Set(PROG_NFS, NULL);
-		} else if (strcmp(command, "") != 0) {
+		}
+		else if (strcmp(command, "") != 0) {
 			printf("Unknown command: '%s'\n", command);
 			printf("Type 'help' to see help\n");
 		}
@@ -202,7 +227,7 @@ static void start(std::vector<std::vector<std::string>> paths)
 	CDatagramSocket DatagramSockets[SOCKET_NUM];
 	CServerSocket ServerSockets[SOCKET_NUM];
 	bool bSuccess;
-	hostent *localHost;
+	hostent* localHost;
 
 	g_PortmapProg.Set(PROG_MOUNT, MOUNT_PORT);  //map port for mount
 	g_PortmapProg.Set(PROG_NFS, NFS_PORT);  //map port for nfs
@@ -231,13 +256,16 @@ static void start(std::vector<std::vector<std::string>> paths)
 			if (ServerSockets[2].Open(MOUNT_PORT, 3) && DatagramSockets[2].Open(MOUNT_PORT)) { //start mount daemon
 				printf("Mount daemon started\n");
 				bSuccess = true;  //all daemon started
-			} else {
+			}
+			else {
 				printf("Mount daemon starts failed (check if port 1058 is not already in use ;) ).\n");
 			}
-		} else {
+		}
+		else {
 			printf("NFS daemon starts failed.\n");
 		}
-	} else {
+	}
+	else {
 		printf("Portmap daemon starts failed.\n");
 	}
 
@@ -254,91 +282,97 @@ static void start(std::vector<std::vector<std::string>> paths)
 	}
 }
 
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
-    std::vector<std::vector<std::string>> pPaths;
-    char *pPath = NULL;
+	std::vector<std::vector<std::string>> pPaths;
+	char* pPath = NULL;
 	bool pathFile = false;
 
-    WSADATA wsaData;
+	WSADATA wsaData;
 
-    printAbout();
+	printAbout();
 
-    if (argc < 2) {
-        pPath = strrchr(argv[0], '\\');
-        pPath = pPath == NULL ? argv[0] : pPath + 1;
-        printUsage(pPath);
-        return 1;
-    }
+	if (argc < 2) {
+		pPath = strrchr(argv[0], '\\');
+		pPath = pPath == NULL ? argv[0] : pPath + 1;
+		printUsage(pPath);
+		return 1;
+	}
 
-    g_nUID = g_nGID = 0;
-    g_bLogOn = true;
-    g_sFileName = NULL;
+	g_nUID = g_nGID = 0;
+	g_bLogOn = true;
+	g_sFileName = NULL;
 	g_sInAddr = "0.0.0.0";
 
-    for (int i = 1; i < argc; i++) {//parse parameters
-        if (_stricmp(argv[i], "-id") == 0) {
-            g_nUID = atoi(argv[++i]);
-            g_nGID = atoi(argv[++i]);
-        } else if (_stricmp(argv[i], "-log") == 0) {
-            g_bLogOn = _stricmp(argv[++i], "off") != 0;
-        } else if (_stricmp(argv[i], "-addr") == 0) {
+	for (int i = 1; i < argc; i++) {//parse parameters
+		if (_stricmp(argv[i], "-id") == 0) {
+			g_nUID = atoi(argv[++i]);
+			g_nGID = atoi(argv[++i]);
+		}
+		else if (_stricmp(argv[i], "-log") == 0) {
+			g_bLogOn = _stricmp(argv[++i], "off") != 0;
+		}
+		else if (_stricmp(argv[i], "-addr") == 0) {
 			g_sInAddr = argv[++i];
-		} else if (_stricmp(argv[i], "-pathFile") == 0) {
-            g_sFileName = argv[++i];
+		}
+		else if (_stricmp(argv[i], "-pathFile") == 0) {
+			g_sFileName = argv[++i];
 
 			if (g_MountProg.SetPathFile(g_sFileName) == false) {
-                printf("Can't open file %s.\n", g_sFileName);
-                return 1;
-			} else {
+				printf("Can't open file %s.\n", g_sFileName);
+				return 1;
+			}
+			else {
 				g_MountProg.Refresh();
 				pathFile = true;
 			}
-        } else if (i == argc - 2) {
-            pPath = argv[argc - 2];  //path is before the last parameter
+		}
+		else if (i == argc - 2) {
+			pPath = argv[argc - 2];  //path is before the last parameter
 
-            char *pCurPathAlias = argv[argc - 1]; //path alias is the last parameter
+			char* pCurPathAlias = argv[argc - 1]; //path alias is the last parameter
 
-            if (pPath != NULL || pCurPathAlias != NULL) {
-                std::vector<std::string> pCurPaths;
-                pCurPaths.push_back(std::string(pPath));
-                pCurPaths.push_back(std::string(pCurPathAlias));
-                pPaths.push_back(pCurPaths);
-            }
+			if (pPath != NULL || pCurPathAlias != NULL) {
+				std::vector<std::string> pCurPaths;
+				pCurPaths.push_back(std::string(pPath));
+				pCurPaths.push_back(std::string(pCurPathAlias));
+				pPaths.push_back(pCurPaths);
+			}
 
-            break;
-        } else if (i == argc - 1) {
-            char *pPath = argv[argc - 1];  //path is the last parameter
+			break;
+		}
+		else if (i == argc - 1) {
+			char* pPath = argv[argc - 1];  //path is the last parameter
 
-            if (pPath != NULL) {
-                char curPathAlias[MAXPATHLEN];
-                strcpy_s(curPathAlias, pPath);
-                char *pCurPathAlias = curPathAlias;
+			if (pPath != NULL) {
+				char curPathAlias[MAXPATHLEN];
+				strcpy_s(curPathAlias, pPath);
+				char* pCurPathAlias = curPathAlias;
 
-                std::vector<std::string> pCurPaths;
-                pCurPaths.push_back(std::string(pPath));
-                pCurPaths.push_back(std::string(pCurPathAlias));
-                pPaths.push_back(pCurPaths);
-            }
+				std::vector<std::string> pCurPaths;
+				pCurPaths.push_back(std::string(pPath));
+				pCurPaths.push_back(std::string(pCurPathAlias));
+				pPaths.push_back(pCurPaths);
+			}
 
-            break;
-        }
-    }
+			break;
+		}
+	}
 
-    HWND console = GetConsoleWindow();
+	HWND console = GetConsoleWindow();
 
-    if (g_bLogOn == false && IsWindow(console)) {
-        ShowWindow(console, SW_HIDE); // hides the window
-    }
+	if (g_bLogOn == false && IsWindow(console)) {
+		ShowWindow(console, SW_HIDE); // hides the window
+	}
 
 	if (pPaths.size() <= 0 && !pathFile) {
-        printf("No paths to mount\n");
-        return 1;
-    }
+		printf("No paths to mount\n");
+		return 1;
+	}
 
-    WSAStartup(0x0101, &wsaData);
-    start(pPaths);
-    WSACleanup();
+	WSAStartup(0x0101, &wsaData);
+	start(pPaths);
+	WSACleanup();
 
-    return 0;
+	return 0;
 }
