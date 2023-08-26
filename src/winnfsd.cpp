@@ -33,6 +33,14 @@ static CPortmapProg g_PortmapProg;
 static CNFSProg g_NFSProg;
 static CMountProg g_MountProg;
 
+/// <summary>
+/// Creates a log file for this program (Recommended for running this program without cmd (Task Scheduler))
+/// </summary>
+static void recordLogs() 
+{
+
+}
+
 static void printUsage(char *pExe)
 {
     printf("\n");
@@ -66,6 +74,7 @@ static void printAbout(void)
     printf("Edited in 2013 by Alexander Schneider (Jankowfsky AG)\n");
 	printf("Edited in 2014 2015 by Yann Schepens\n");
 	printf("Edited in 2016 by Peter Philipp (Cando Image GmbH), Marc Harding\n");
+    printf("Edited in 2023 by John Carlo Gutierrez\n");
     printLine();
 }
 
