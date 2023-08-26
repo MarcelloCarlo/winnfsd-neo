@@ -42,7 +42,7 @@ static CMountProg g_MountProg;
 /// <summary>
 /// Creates a log file for this program (Recommended for running this program without cmd (Task Scheduler))
 /// </summary>
-static void recordLogs(std::string& logText)
+static void recordLogs(std::string logText)
 {
 	// Get the current working directory
 	char cCurrentPath[FILENAME_MAX];
@@ -50,14 +50,22 @@ static void recordLogs(std::string& logText)
 	GetCurrentDir(cCurrentPath, sizeof(cCurrentPath));
 
 	// Create the folder logs within the directory
-	char logFolder[5] = "logs";
-	std::strcat(cCurrentPath, logFolder);
+	char logFolder[7] = "\\logs";
+	strcat_s(cCurrentPath, logFolder);
 
 	if (!CreateDirectory(cCurrentPath, NULL))
 	{
-		CreateDirectory("C:\\logs\\", NULL);
+		DWORD error = GetLastError();
+		TCHAR buf[256];
+		FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+			NULL, GetLastError(), MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+			buf, (sizeof(buf) / sizeof(TCHAR)), NULL);
+		printf("Error creating folder %s", buf);
 	}
+
 	// Check if logfile exists, if yes then open and add, if no then create new file
+
+
 	std::string logFileName = "NFSLogs";
 	// Log the time and the text from the logText
 	// Close the process (memory safety)
@@ -291,6 +299,7 @@ int main(int argc, char* argv[])
 	WSADATA wsaData;
 
 	printAbout();
+	recordLogs("test");
 
 	if (argc < 2) {
 		pPath = strrchr(argv[0], '\\');
