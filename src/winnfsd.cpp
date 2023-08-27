@@ -46,11 +46,19 @@ static void recordLogs(std::string logText)
 {
 	// Get the current working directory
 	char cCurrentPath[FILENAME_MAX];
+	char logFolder[7] = "\\logs";
+	time_t curr_time;
+	struct tm curr_tm;
+	char logFileName[100] = "NFSLogs";
+	char currentDate[50];
+	FILE* logFile;
+	const int length = logText.length();
+	char* logMessage = new char[MAXBYTE];
+	errno_t err;
 
 	GetCurrentDir(cCurrentPath, sizeof(cCurrentPath));
 
 	// Create the folder logs within the directory
-	char logFolder[7] = "\\logs";
 	strcat_s(cCurrentPath, logFolder);
 
 	if (!CreateDirectory(cCurrentPath, NULL))
@@ -60,28 +68,28 @@ static void recordLogs(std::string logText)
 		FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
 			NULL, GetLastError(), MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
 			buf, (sizeof(buf) / sizeof(TCHAR)), NULL);
-		printf("Error creating folder %s", buf);
+		printf("Error creating folder: %s", buf);
 	}
 
 	// Check if logfile exists, if yes then open and add, if no then create new file
-	time_t curr_time;
-	struct tm curr_tm;
-
-	char date_string[100];
-	char time_string[100];
 
 	time(&curr_time);
 	localtime_s(&curr_tm, &curr_time);
-	
-	char buf[50];
-	asctime_s(buf, 50, &curr_tm);
-	char logFileName[100] = "NFSLogs";
-	//strftime(logFileName, 100, "%m%d%Y", curr_tm);
-	strcat_s(logFileName, buf);
+
+	strftime(currentDate, 50, "_%m%d%Y.txt", &curr_tm);
+	strcat_s(logFileName, currentDate);
+	strcat_s(cCurrentPath, "\\");
+	strcat_s(cCurrentPath, logFileName);
+	strcat_s(logMessage, sizeof logMessage, logText.c_str());
+	printf("dead");
 	// Log the time and the text from the logText
+	fopen_s(&logFile, cCurrentPath, "a+");
+	strftime(currentDate, 50, "%m-%d-%Y %T", &curr_tm);
+	fprintf(logFile, "[%s] %s\n", currentDate, logMessage);
+	fclose(logFile);
+
 	// Close the process (memory safety)
-
-
+	_fcloseall();
 }
 
 static void printUsage(char* pExe)
@@ -100,6 +108,7 @@ static void printUsage(char* pExe)
 	printf("On Linux> mount - t nfs 192.168.12.34: / exports\n\n");
 	printf("Use \".\" to export the current directory (works also for -filePath):\n");
 	printf("On Windows> %s . /exports\n", pExe);
+	recordLogs("Called printUsage()");
 }
 
 static void printLine(void)
@@ -119,6 +128,7 @@ static void printAbout(void)
 	printf("Edited in 2016 by Peter Philipp (Cando Image GmbH), Marc Harding\n");
 	printf("Edited in 2023 by John Carlo Gutierrez\n");
 	printLine();
+	recordLogs("Called printAbout()");
 }
 
 static void printHelp(void)
@@ -133,6 +143,7 @@ static void printHelp(void)
 	printf("reset: reset the service\n");
 	printf("quit: quit this program\n");
 	printLine();
+	recordLogs("Called printHelp()");
 }
 
 static void printCount(void)
@@ -143,12 +154,15 @@ static void printCount(void)
 
 	if (nNum == 0) {
 		printf("There is no client mounted.\n");
+		recordLogs("There is no client mounted.");
 	}
 	else if (nNum == 1) {
 		printf("There is 1 client mounted.\n");
+		recordLogs("There is 1 client mounted.");
 	}
 	else {
 		printf("There are %d clients mounted.\n", nNum);
+		recordLogs("There are number of clients mounted.");
 	}
 }
 
@@ -172,6 +186,7 @@ static void printConfirmQuit(void)
 	printf("\n");
 	printCount();
 	printf("Are you sure to quit? (y/N): ");
+	recordLogs("Quit option selected.");
 }
 
 static void mountPaths(std::vector<std::vector<std::string>> paths)
@@ -268,30 +283,37 @@ static void start(std::vector<std::vector<std::string>> paths)
 
 	if (ServerSockets[0].Open(PORTMAP_PORT, 3) && DatagramSockets[0].Open(PORTMAP_PORT)) { //start portmap daemon
 		printf("Portmap daemon started\n");
+		recordLogs("Portmap daemon started.");
 
 		if (ServerSockets[1].Open(NFS_PORT, 10) && DatagramSockets[1].Open(NFS_PORT)) { //start nfs daemon
 			printf("NFS daemon started\n");
+			recordLogs("NFS daemon started.");
 
 			if (ServerSockets[2].Open(MOUNT_PORT, 3) && DatagramSockets[2].Open(MOUNT_PORT)) { //start mount daemon
 				printf("Mount daemon started\n");
+				recordLogs("Mount daemon started.");
 				bSuccess = true;  //all daemon started
 			}
 			else {
 				printf("Mount daemon starts failed (check if port 1058 is not already in use ;) ).\n");
+				recordLogs("Mount daemon starts failed (check if port 1058 is not already in use ;) ).");
 			}
 		}
 		else {
 			printf("NFS daemon starts failed.\n");
+			recordLogs("NFS daemon starts failed.");
 		}
 	}
 	else {
 		printf("Portmap daemon starts failed.\n");
+		recordLogs("Portmap daemon starts failed.");
 	}
 
 
 	if (bSuccess) {
 		localHost = gethostbyname("");
 		printf("Listening on %s\n", g_sInAddr);  //local address
+		recordLogs("Listening on local address.");
 		inputCommand();  //wait for commands
 	}
 
@@ -308,9 +330,8 @@ int main(int argc, char* argv[])
 	bool pathFile = false;
 
 	WSADATA wsaData;
-
+	recordLogs("Program started.");
 	printAbout();
-	recordLogs("test");
 
 	if (argc < 2) {
 		pPath = strrchr(argv[0], '\\');
@@ -387,6 +408,7 @@ int main(int argc, char* argv[])
 
 	if (pPaths.size() <= 0 && !pathFile) {
 		printf("No paths to mount\n");
+		recordLogs("No paths to mount");
 		return 1;
 	}
 
