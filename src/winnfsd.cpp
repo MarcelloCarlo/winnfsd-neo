@@ -64,9 +64,20 @@ static void recordLogs(std::string logText)
 	}
 
 	// Check if logfile exists, if yes then open and add, if no then create new file
+	time_t curr_time;
+	struct tm curr_tm;
 
+	char date_string[100];
+	char time_string[100];
 
-	std::string logFileName = "NFSLogs";
+	time(&curr_time);
+	localtime_s(&curr_tm, &curr_time);
+	
+	char buf[50];
+	asctime_s(buf, 50, &curr_tm);
+	char logFileName[100] = "NFSLogs";
+	//strftime(logFileName, 100, "%m%d%Y", curr_tm);
+	strcat_s(logFileName, buf);
 	// Log the time and the text from the logText
 	// Close the process (memory safety)
 
