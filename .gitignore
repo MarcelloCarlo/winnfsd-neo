@@ -159,3 +159,4 @@ $RECYCLE.BIN/
 /src/.vs/WinNFSd
 /nfsservicetmp
 /.vs
+/src/logs
