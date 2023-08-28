@@ -10,7 +10,6 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
-#include <iostream>
 #include <string>
 #include <windows.h>
 
@@ -61,15 +60,7 @@ static void recordLogs(std::string logText)
 	// Create the folder logs within the directory
 	strcat_s(cCurrentPath, logFolder);
 
-	if (!CreateDirectory(cCurrentPath, NULL))
-	{
-		DWORD error = GetLastError();
-		TCHAR buf[256];
-		FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-			NULL, GetLastError(), MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-			buf, (sizeof(buf) / sizeof(TCHAR)), NULL);
-		printf("Error creating folder: %s", buf);
-	}
+	CreateDirectory(cCurrentPath, NULL);
 
 	// Check if logfile exists, if yes then open and add, if no then create new file
 
@@ -80,12 +71,11 @@ static void recordLogs(std::string logText)
 	strcat_s(logFileName, currentDate);
 	strcat_s(cCurrentPath, "\\");
 	strcat_s(cCurrentPath, logFileName);
-	strcat_s(logMessage, sizeof logMessage, logText.c_str());
-	printf("dead");
+
 	// Log the time and the text from the logText
 	fopen_s(&logFile, cCurrentPath, "a+");
 	strftime(currentDate, 50, "%m-%d-%Y %T", &curr_tm);
-	fprintf(logFile, "[%s] %s\n", currentDate, logMessage);
+	fprintf(logFile, "[%s] %s\n", currentDate, logText.c_str());
 	fclose(logFile);
 
 	// Close the process (memory safety)
