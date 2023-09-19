@@ -58,3 +58,8 @@ On Linux> mount - t nfs 192.168.12.34: / exports
 Use "." to export the current directory (works also for -filePath):
 On Windows> WinNFSd.exe . /exports
 ```
+TODO
+------------
+* Bug fixes.
+* Optimise compatibility for Windows 10/11.
+* Convert this into Windows Service (so it can be run on the background).
